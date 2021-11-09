@@ -1,0 +1,68 @@
+{% extends 'mainapp/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Оформление заказа{% endblock %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container px-4 px-lg-5 mt-5">
+    <h3 class="text-center mt-5 mb-5">Оформление заказа</h3>
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+      <strong>{{ message }}</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+      <strong>{{ message }}</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% if cart.products.count %}
+    <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">Наименование</th>
+          <th scope="col">Изображение</th>
+          <th scope="col">Цена</th>
+          <th scope="col">Кол-во</th>
+          <th scope="col">Общая цена</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for product in cart.products.all %}
+        <tr>
+          <th scope="row">{{ product.content_object.title }}</th>
+          <td class="w-25"><img src="{{ product.content_object.image.url }}" alt="product-image" class="img-fluid"></td>
+          <td>{{ product.content_object.price }} ₽</td>
+          <td>{{ product.qty }}</td>
+          <td>{{ product.final_price }} ₽</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td colspan="2"></td>
+          <td>Итого: </td>
+          <td>{{ cart.total_products }}</td>
+          <td><strong>{{ cart.final_price }} ₽</strong></td>
+        </tr>
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+    <hr>
+    <h3 class="text-center mt-5 mb-5">Заполните форму</h3>
+    <form action="{% url 'create-order' %}" method="POST">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <input type="submit" class="btn btn-outline-dark mt-3 align" value="Оформить заказ">
+    </form>
+  </div>
+</section>
+
+{% endblock content %}
