@@ -30,11 +30,11 @@
         <tbody>
         {% for product in cart.products.all %}
         <tr>
-          <th scope="row">{{ product.content_object.title }}</th>
-          <td class="w-25"><img src="{{ product.content_object.image.url }}" alt="product-image" class="img-fluid"></td>
-          <td>{{ product.content_object.price }} ₽</td>
+          <th scope="row">{{ product.product.title }}</th>
+          <td class="w-25"><img src="{{ product.product.image.url }}" alt="product-image" class="img-fluid"></td>
+          <td>{{ product.product.price }} ₽</td>
           <td>
-            <form action="{% url 'change-qty' ct_model=product.content_object.get_model_name slug=product.content_object.slug %}" method="POST" class="d-flex">
+            <form action="{% url 'change-qty' slug=product.product.slug %}" method="POST" class="d-flex">
               {% csrf_token %}
               <input class="form-control me-3" id="inputQuantity" name="qty" type="number" value="{{ product.qty }}" min="1" style="max-width: 5rem" />
               <input type="submit" class="btn btn-outline-dark" value="Изменить кол-во">
@@ -42,7 +42,7 @@
           </td>
           <td>{{ product.final_price }} ₽</td>
           <td>
-            <a href="{% url 'delete-from-cart' ct_model=product.content_object.get_model_name slug=product.content_object.slug %}">
+            <a href="{% url 'delete-from-cart' slug=product.product.slug %}">
               <button class="btn btn-outline-dark">
                 <i class="bi-cart-fill me-1"></i>
                 Удалить из корзины
