@@ -6,7 +6,10 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
         <li class="nav-item"><a class="nav-link active" aria-current="page" href="/">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="#!">О нас</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ request.user.username }}">Личный кабинет</a></li>
+        {% if request.user.is_authenticated %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Выход</a></li>
+        {% endif %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Категории</a>
           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -14,7 +17,7 @@
             <li><hr class="dropdown-divider" /></li>
             {% get_categories as categories %}
             {% for category in categories %}
-              <li><a class="dropdown-item" href="{{ category.url }}">{{ category.name }}<span style="
+            <li><a class="dropdown-item" href="{{ category.get_absolute_url }}">{{ category.name }}<span style="
               float: right;
               color: $subtle-white;
               background-color: $blue;
@@ -22,12 +25,16 @@
               text-align: center;
               font-size: 1rem;
               border-radius: 3px;">
-                 | {{ category.count }}
+                 # {{ category.count }}
               </span> </a></li>
             {% endfor %}
           </ul>
         </li>
       </ul>
+      {% if not request.user.is_authenticated %}
+      <a class="nav-link active text-dark" aria-current="page" href="{% url 'registration' %}">Регистрация</a>|
+      <a class="nav-link active text-dark" aria-current="page" href="{% url 'login' %}">Вход</a>
+      {% else %}
       <form action="{% url 'cart' %}" class="d-flex">
         <button class="btn btn-outline-dark" type="submit">
           <i class="bi-cart-fill me-1"></i>
@@ -35,6 +42,7 @@
           <span class="badge bg-dark text-white ms-1 rounded-pill">{{ cart.products.count }}</span>
         </button>
       </form>
+      {% endif %}
     </div>
   </div>
 </nav>
