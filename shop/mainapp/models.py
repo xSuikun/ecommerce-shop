@@ -12,8 +12,6 @@ from io import BytesIO
 
 User = get_user_model()
 
-ALL_CATEGORIES_CONTENT_TYPE = ('notebook', 'smartphone')
-
 
 class MinResolutionErrorException(Exception):
     pass
@@ -23,70 +21,24 @@ class MaxResolutionErrorException(Exception):
     pass
 
 
-def get_category_models(*model_names):
-    return [models.Count(model_name) for model_name in model_names]
-
-
-class LatestProductsManager:
-    @staticmethod
-    def get_latest_products(limit=4, *args, **kwargs):
-        with_respect_to = kwargs.get('with_respect_to')
-        products = []
-        ct_models = ContentType.objects.filter(model__in=args)
-        print(ct_models)
-        for ct_model in ct_models:
-            if len(products) >= limit:
-                break
-            model_products = ct_model.model_class()._base_manager.all().order_by('-id')
-            products.extend(model_products)
-        if with_respect_to:
-            ct_model = ContentType.objects.filter(model=with_respect_to)
-            if ct_model.exists():
-                if with_respect_to in args:
-                    return sorted(
-                        products, key=lambda x: x.__class__._meta.model_name.startswith(with_respect_to), reverse=True
-                    )
-        return products[:limit]
-
-    @staticmethod
-    def all(limit=4):
-        return LatestProducts.objects.get_latest_products(limit, *ALL_CATEGORIES_CONTENT_TYPE)
-
-
-class LatestProducts:
-    objects = LatestProductsManager()
-
-
-class CategoryManager(models.Manager):
-
-    CATEGORY_NAME_COUNT_NAME = {
-        'Ноутбуки': 'notebook__count',
-        'Смартфоны': 'smartphone__count',
-    }
-
-    def get_queryset(self):
-        return super().get_queryset()
-
-    def get_categories_for_header(self):
-        models = get_category_models(*ALL_CATEGORIES_CONTENT_TYPE)
-        qs = list(self.get_queryset().annotate(*models))
-        data = [
-            dict(name=c.name, url=c.get_absolute_url(), count=getattr(c, self.CATEGORY_NAME_COUNT_NAME[c.name]))
-            for c in qs
-        ]
-        return data
-
-
 class Category(models.Model):
     name = models.CharField(max_length=255, verbose_name='Категория')
     slug = models.SlugField(unique=True)
-    objects = CategoryManager()
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
         return reverse('category_detail', kwargs={'slug': self.slug})
+
+    def get_fields_for_filter_in_template(self):
+        return ProductFeatures.objects.filter(
+            category=self,
+            use_in_filter=True).prefetch_related('category').value(
+            'feature_key',
+            'feature_measure',
+            'feature_name',
+            'filter_type')
 
 
 class Product(models.Model):
@@ -102,14 +54,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=9, decimal_places=2, verbose_name='Цена')
 
     def get_absolute_url(self):
-        model = self.__class__.__name__
-        return reverse('product_detail', kwargs={'model': model, 'slug': self.slug})
-
-    def get_model_name(self):
-        return self.__class__.__name__.lower()
-
-    class Meta:
-        abstract = True
+        return reverse('product_detail', kwargs={'slug': self.slug})
 
     def __str__(self):
         return self.title
@@ -136,49 +81,74 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
 
-class Notebook(Product):
-    diagonal = models.CharField(max_length=55, verbose_name='Диагональ', blank=True)
-    display = models.CharField(max_length=55, verbose_name='Технология дисплея', blank=True)
-    processor = models.CharField(max_length=55, verbose_name='Процессор', blank=True)
-    ram = models.CharField(max_length=55, verbose_name='Оперативная память', blank=True)
-    video = models.CharField(max_length=55, verbose_name='Графический контроллер', blank=True)
-    time_without_charge = models.CharField(max_length=55, verbose_name='Время работы без подзарядки', blank=True)
+class ProductFeatures(models.Model):
+    RADIO = 'radio'
+    CHECKBOX = 'checkbox'
 
-    def __str__(self):
-        return f'{self.category.name} : {self.title}'
-
-
-class Smartphone(Product):
-    diagonal = models.CharField(max_length=55, verbose_name='Диагональ', blank=True)
-    display = models.CharField(max_length=55, verbose_name='Технология дисплея', blank=True)
-    resolution = models.CharField(max_length=55, verbose_name='Разрешение экрана', blank=True)
-    accum_volume = models.CharField(max_length=55, verbose_name='Объем баратеи', blank=True)
-    ram = models.CharField(max_length=55, verbose_name='Оперативная память', blank=True)
-    sd = models.BooleanField(default=True, verbose_name='Карта памяти', blank=True)
-    sd_volume_max = models.CharField(
-        max_length=55, verbose_name='Максимальный объем карты памяти', blank=True, null=True
+    FILTER_TYPE_CHOICES = (
+        (RADIO, 'Радиокнопка'),
+        (RADIO, 'Чекбокс')
     )
-    main_cam_mp = models.CharField(max_length=55, verbose_name='Главная камера МПикс', blank=True)
-    frontal_cam_mp = models.CharField(max_length=55, verbose_name='Фронтальная камера МПикс', blank=True)
+    feature_key = models.CharField(max_length=100, verbose_name='Ключ характеристики')
+    feature_name = models.CharField(max_length=255, verbose_name='Название характеристики')
+    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE)
+    postfix_for_value = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        verbose_name='Постфикс для значение',
+        help_text=f'Например, для характеристики "Часты работы" к значению можно добавить постфикс "часов".'
+    )
+    use_in_filter = models.BooleanField(
+        default=False,
+        verbose_name='Использовать в фильтрации товаров в шаблоне'
+    )
+    filter_type = models.CharField(
+        max_length=20,
+        verbose_name='Тип фильтра',
+        default=CHECKBOX,
+        choices=FILTER_TYPE_CHOICES
+    )
+    filter_measure = models.CharField(
+        max_length=50,
+        verbose_name='Единица измерения для фильтра',
+        help_text='Единица измерения для конкретного фильтра. Например, "Частота процессора (Ghz)". '
+                  'Единицей измерения будет информация в скобках.'
+    )
 
     def __str__(self):
-        return f'{self.category.name} : {self.title}'
+        return f'Категория - "{self.category.name}" | Характеристика - "{self.feature_name}"'
+
+
+class ProductFeatureValidators(models.Model):
+    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE)
+    feature = models.ForeignKey(
+        ProductFeatures, verbose_name='Характеристика', null=True, blank=True, on_delete=models.CASCADE
+    )
+    feature_value = models.CharField(
+        max_length=255, unique=True, null=True, blank=True, verbose_name='Значение характеристики'
+    )
+
+    def __str__(self):
+        if not self.feature:
+            return f'Вадидатор категории "{self.category.name}" - характеристика не выбрана'
+        else:
+            return f'Вадидатор категории "{self.category.name}" | Характеристика - "{self.feature.feature_name}" | ' \
+                   f'Значение - "{self.feature_value}"'
 
 
 class CartProduct(models.Model):
     user = models.ForeignKey('Customer', verbose_name='Покупатель', on_delete=models.CASCADE, null=True)
     cart = models.ForeignKey('Cart', verbose_name='Корзина', on_delete=models.CASCADE, related_name='related_products', null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
+    product = models.ForeignKey(Product, verbose_name='Продукт', on_delete=models.CASCADE)
     qty = models.PositiveIntegerField(default=1)
     final_price = models.DecimalField(max_digits=9, default=0, decimal_places=2, verbose_name='Итоговая цена')
 
     def __str__(self):
-        return f'Продукт: {self.content_object} (для корзины)'
+        return f'Продукт: {self.product.title} (для корзины)'
 
     def save(self, *args, **kwargs):
-        self.final_price = self.qty * self.content_object.price
+        self.final_price = self.qty * self.product.price
         super().save(*args, **kwargs)
 
 
