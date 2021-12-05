@@ -23,9 +23,9 @@
                     <span class="text-decoration-line-through">94999.00₽</span>
                     <span>{{ product.price }}₽</span>
                 </div>
-                <p class="lead">Описание: </p>
+                <p class="lead">Описание: {{ product.description|linebreaks }}</p>
                 <div class="d-flex">
-                    <form action="{% url 'add_to_cart' slug=product.slug %}" class="d-flex">
+                    <form action="{% url 'add_to_cart' ct_model=ct_model slug=product.slug %}" class="d-flex">
                         {% csrf_token %}
                         <input class="form-control text-center me-3" id="inputQuantity" name="qtu" type="num" value="1" style="max-width: 3rem" />
                         <button class="btn btn-outline-dark flex-shrink-0" type="submit">
@@ -35,7 +35,7 @@
                     </form>
                 </div>
             </div>
-<!--            {% include 'mainapp/_specification.html' %}-->
+            {% include 'mainapp/_specification.html' %}
         </div>
     </div>
 </section>
