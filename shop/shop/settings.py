@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mainapp',
+    'specs',
     'crispy_forms',
 ]
 
@@ -63,9 +64,9 @@ WSGI_APPLICATION = 'shop.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'ec_db',
-        'USER': 'ecomuser',
-        'PASSWORD': 'password',
+        'NAME': 'ecommerce_shop',
+        'USER': 'admin',
+        'PASSWORD': 'admin',
         'HOST': '127.0.0.1',
         'PORT': 5432
     }

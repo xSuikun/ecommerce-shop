@@ -6,7 +6,7 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
         <li class="nav-item"><a class="nav-link active" aria-current="page" href="/">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ request.user.username }}">Личный кабинет</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'profile' %}">Личный кабинет</a></li>
         {% if request.user.is_authenticated %}
         <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Выход</a></li>
         {% endif %}

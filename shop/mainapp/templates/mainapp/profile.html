@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" id="css">
+  <script defer type="application/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<div class="container rounded bg-white mt-5 mb-5">
+  <div class="row">
+    <div class="col-md-3 border-right">
+      <div class="d-flex flex-column align-items-center text-center p-3 py-5"><img class="rounded-circle mt-5" width="150px" src="https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"><span class="font-weight-bold">{{ request.user.username }}</span><span class="text-black-50">{{ request.user.email }}</span><span> </span></div>
+    </div>
+    <div class="col-md-9 border-right">
+      <div class="p-3 py-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="text-right">История заказов</h4>
+        </div>
+        {% if not orders.count %}-->
+        <div class="col-md-12"><label class="labels">У вас еще нет заказов. <a class="active text-dark" href="{% url 'base' %}">Начать можно здесь!</a></label><br>
+          {% else %}
+          <table class="table">
+            <thead>
+            <th scope="col">Номер</th>
+            <th scope="col">Статус</th>
+            <th scope="col">Сумма</th>
+            <th scope="col">Товар</th>
+            <th scope="col">Дополнительно</th>
+            </thead>
+            <tbody>
+            {% for order in orders %}
+            <tr>
+              <th scope="row">{{ order.id }}</th>
+              <td>{{ order.get_status_display }}</td>
+              <td>{{ order.final_price }}</td>
+              <td>
+                <ul>
+                  {% for item in order.cart.products.all %}
+                  <li>{{ item.product.title }} x {{ item.qty }}</li>
+                  {% endfor %}
+                </ul>
+              </td>
+              <td>
+                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exampleModal-{{ order.id }}">Посмотреть</button>
+                <div class="modal fade" id="exampleModal-{{ order.id }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Заказ №{{ order.id }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <h4 class="text-center">Товар</h4>
+
+                        <table class="table">
+                          <thead>
+                          <th scape="col">Наименование</th>
+                          <th scape="col">Изображение</th>
+                          <th scape="col">Цена</th>
+                          <th scape="col">Кол-во</th>
+                          <th scape="col">Общая цена</th>
+                          </thead>
+                          <tbody>
+                          {% for item in order.cart.products.all %}
+                          <tr>
+                            <th scope="row">{{ item.product.title }}</th>
+                            <td class="w-25"><img  src="{{ item.product.image.url }}" class="img-fluid" alt="product-image"></td>
+                            <td><strong>{{ item.product.price }}</strong> руб.</td>
+                            <td>{{ item.qty }}</td>
+                            <td>{{ item.final_price }}</td>
+                          </tr>
+                          {% endfor %}
+                          <tr>
+                            <td colspan="2"></td>
+                            <td>Итого: </td>
+                            <td>{{ order.cart.total_products }}</td>
+                            <td><strong>{{ order.cart.final_price }}</strong></td>
+                          </tr>
+                          </tbody>
+                        </table>
+                        <br>
+                        <h4 class="text-center">Дополнительная информация</h4>
+                        <p>ФИО: {{ order.first_name }} {{ order.last_name }}</p>
+                        <p>Телефон: {{ order.customer.phone }}</p>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Закрыть</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
