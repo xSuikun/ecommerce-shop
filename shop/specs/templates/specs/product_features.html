@@ -14,9 +14,9 @@
         <div class="row mt-4">
             <div class="col-md-4">
                 <div class="list-group">
-                    <a href="#" class="list-group-item action">Создать новую категорию</a>
-                    <a href="#" class="list-group-item action">Создать новую характеристику</a>
-                    <a href="#" class="list-group-item action">Создать значение характеристики</a>
+                    <a href="{% url 'create_category' %}" class="list-group-item action {% if request.path == '/specifications/create_category/' %}active{% endif %}">Создать новую категорию</a>
+                    <a href="{% url 'create_feature' %}" class="list-group-item action {% if request.path == '/specifications/create_feature/' %}active{% endif %}">Создать новую характеристику</a>
+                    <a href="{% url 'create_validator' %}" class="list-group-item action {% if request.path == '/specifications/create_validator/' %}active{% endif %}">Создать значение характеристики</a>
                     <a href="#" class="list-group-item action">Создать характеристику для товара</a>
                     <a href="#" class="list-group-item action">Редактировать характеристики товара</a>
                 </div>

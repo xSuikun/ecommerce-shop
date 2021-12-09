@@ -43,6 +43,11 @@ class Product(models.Model):
     image = models.ImageField(verbose_name='Изображение')
     description = models.TextField(verbose_name='Описание')
     price = models.DecimalField(max_digits=9, decimal_places=2, verbose_name='Цена')
+    features = models.ManyToManyField(
+        'specs.ProductFeatures',
+        blank=True,
+        related_name='features_for_product',
+        verbose_name='Характеристики')
 
     def get_absolute_url(self):
         return reverse('product_detail', kwargs={'slug': self.slug})
@@ -70,6 +75,9 @@ class Product(models.Model):
                 filestream, 'ImageField', name, 'join/image', sys.getsizeof(filestream), None
             )
         super().save(*args, **kwargs)
+
+    def get_features(self):
+        return {f.feature.feature_name: ' '.join([f.value, f.feature.unit or ""]) for f in self.features.all()}
 
 
 class CartProduct(models.Model):
