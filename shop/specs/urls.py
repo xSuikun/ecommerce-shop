@@ -6,4 +6,5 @@ urlpatterns = [
     path('create_category/', CreateCategoryView.as_view(), name='create_category'),
     path('create_feature/', CreateCategoryFeatureView.as_view(), name='create_feature'),
     path('create_validator/', CreateFeatureValidatorView.as_view(), name='create_validator'),
+    path('create_validator/', CreateFeatureValidatorView.as_view(), name='create_validator'),
 ]
