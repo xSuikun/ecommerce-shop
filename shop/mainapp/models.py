@@ -160,3 +160,13 @@ class Order(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+class Comments(models.Model):
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, verbose_name='Товар', related_name='comments_product'
+    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Автор')
+    created_at = models.DateTimeField(auto_now=True)
+    text = models.TextField(verbose_name='Комментарий')
+    status = models.BooleanField(verbose_name='Видимый?')

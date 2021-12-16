@@ -13,3 +13,4 @@ def get_categories():
 @register.filter()
 def count(cart):
     return cart.count()
+

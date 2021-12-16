@@ -35,7 +35,22 @@
                     </form>
                 </div>
             </div>
-<!--            {% include 'mainapp/_specification.html' %}-->
+            <!--            {% include 'mainapp/_specification.html' %}-->
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Характеристики</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for spec,s in specifications.items %}
+                <tr>
+                    <td>{{ spec }}</td>
+                    <td>{{ s }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </section>

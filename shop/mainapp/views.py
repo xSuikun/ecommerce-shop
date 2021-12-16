@@ -6,10 +6,14 @@ from django.views import View
 from django.http import HttpResponseRedirect
 from django.views.generic import DetailView
 
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from .models import Product, Category, Customer, Cart, CartProduct, Order
 from .forms import OrderForm, LoginForm, RegistrationForm
 from .utils import recalculate_cart
 from .mixins import CartMixin
+from .serializers import ProductListSerializer
 
 
 class BaseView(CartMixin, View):
@@ -22,12 +26,12 @@ class BaseView(CartMixin, View):
         return render(request, 'mainapp/base.html', context)
 
 
-class CategoryDetailView(CartMixin, DetailView):
-    model = Product
-    queryset = Product.objects.all()
-    context_object_name = 'latest_products'
-    template_name = 'mainapp/base.html'
-    slug_url_kwarg = 'slug'
+class CategoryDetailView(CartMixin, View):
+    def get(self, request, *args, **kwargs):
+        category_name = kwargs.get('slug')
+        products = Product.objects.filter(category__slug=category_name)
+        context = {'products': products}
+        return render(request, 'mainapp/category_detail.html', context)
 
 
 class ProductDetailView(CartMixin, DetailView):
@@ -35,8 +39,7 @@ class ProductDetailView(CartMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        categories = Category.objects.all()
-        context['categories'] = categories
+        context['specifications'] = self.get_object().get_features()
         context['latest_products'] = Product.objects.all()
         context['cart'] = self.cart
         return context
@@ -97,9 +100,7 @@ class ChangeQtyView(CartMixin, View):
 
 class CartView(CartMixin, View):
     def get(self, request, *args, **kwargs):
-        categories = Category.objects.all()
         context = {
-            'categories': categories,
             'cart': self.cart,
         }
         return render(request, 'mainapp/cart.html', context)
@@ -107,10 +108,8 @@ class CartView(CartMixin, View):
 
 class CheckoutView(CartMixin, View):
     def get(self, request, *args, **kwargs):
-        categories = Category.objects.all()
         form = OrderForm(request.POST or None)
         context = {
-            'categories': categories,
             'cart': self.cart,
             'form': form,
         }
@@ -192,6 +191,7 @@ class RegistrationView(CartMixin, View):
         context = {'form': form, 'cart': self.cart}
         return render(request, 'mainapp/registration.html', context)
 
+
 class ProfileView(CartMixin, View):
     def get(self, request, *args, **kwargs):
         customer = Customer.objects.get(user=request.user)
@@ -199,3 +199,10 @@ class ProfileView(CartMixin, View):
         categories = Category.objects.all()
         context = {'customer': customer, 'orders': orders, 'categories': categories, 'cart': self.cart}
         return render(request, 'mainapp/profile.html', context)
+
+
+class ProductListView(APIView):
+    def get(self, request):
+        products = Product.objects.all()
+        serializer = ProductListSerializer(products, many=True)
+        return Response(serializer.data)
