@@ -12,25 +12,9 @@ from mainapp.logic import operations
 
 
 class ShopAPITestCase(TestCase):
-    # def test_get(self):
-    #     product_1 = Product.objects.create(
-    #         title='TestNotebook', slug='test_notebook', price='22555', category=Category.objects.first(),
-    #         image='macbookpro13.jpg', description='123'
-    #     )
-    #     product_2 = Product.objects.create(
-    #         title='TestSmartphone', slug='test_smartphone', price='44333', category=Category.objects.first(),
-    #         image='macbookpro13.jpg', description='123'
-    #     )
-    #     print(product_1.category)
-    #     url = reverse('api/products-list')
-    #     print(url)
-    #     response = self.client.get(url)
-    #     serializer_data = ProductListSerializer([product_1, product_2], many=True).data
-    #     self.assertEqual(serializer_data, response.data)
-
     def test_category_serializer(self):
         test_category = Category.objects.create(name='TestCategory', slug='test_category')
-        url = 'http://localhost/testcategories/'
+        url = 'http://localhost/api/categories/'
         print(f'Url: {url}')
         response = self.client.get(url)
         expected_data = [OrderedDict([('name', 'TestCategory'), ('slug', 'test_category')])]

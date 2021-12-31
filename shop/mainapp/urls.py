@@ -7,7 +7,7 @@ from .views import *
 
 router = SimpleRouter()
 router.register(r'api/products', ProductViewSet)
-router.register(r'testcategories', CategoryViewSet)
+router.register(r'api/categories', CategoryViewSet)
 
 urlpatterns = [
     path('', BaseView.as_view(), name='base'),
