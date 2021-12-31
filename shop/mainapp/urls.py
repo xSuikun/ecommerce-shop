@@ -1,11 +1,18 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
+from rest_framework.routers import SimpleRouter
+
 from .views import *
 
+
+router = SimpleRouter()
+router.register(r'api/products', ProductViewSet)
+router.register(r'testcategories', CategoryViewSet)
 
 urlpatterns = [
     path('', BaseView.as_view(), name='base'),
     path('cart/', CartView.as_view(), name='cart'),
+    path('cart2/', CartView.as_view(), name='cart'),
     path('checkout/', CheckoutView.as_view(), name='checkout'),
     path('create-order/', CreateOrderView.as_view(), name='create-order'),
     path('add-to-cart/<str:slug>/', AddToCartView.as_view(), name='add_to_cart'),
@@ -18,5 +25,6 @@ urlpatterns = [
     path('registration/', RegistrationView.as_view(), name='registration'),
     path('registration/', RegistrationView.as_view(), name='registration'),
     path('profile/', ProfileView.as_view(), name='profile'),
-    path('api_products/', ProductListView.as_view(), name='api_products'),
 ]
+
+urlpatterns += router.urls

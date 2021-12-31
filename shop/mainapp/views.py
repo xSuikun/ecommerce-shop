@@ -8,12 +8,13 @@ from django.views.generic import DetailView
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 
 from .models import Product, Category, Customer, Cart, CartProduct, Order
 from .forms import OrderForm, LoginForm, RegistrationForm
 from .utils import recalculate_cart
 from .mixins import CartMixin
-from .serializers import ProductListSerializer
+from .serializers import ProductListSerializer, CategoryListSerializer
 
 
 class BaseView(CartMixin, View):
@@ -201,8 +202,11 @@ class ProfileView(CartMixin, View):
         return render(request, 'mainapp/profile.html', context)
 
 
-class ProductListView(APIView):
-    def get(self, request):
-        products = Product.objects.all()
-        serializer = ProductListSerializer(products, many=True)
-        return Response(serializer.data)
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductListSerializer
+
+
+class CategoryViewSet(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategoryListSerializer

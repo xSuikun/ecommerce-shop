@@ -38,16 +38,17 @@ class Product(models.Model):
     MAX_IMG_SIZE = 3145728
 
     title = models.CharField(max_length=255, verbose_name='Наименование')
-    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE, null=True)
     slug = models.SlugField(unique=True)
     image = models.ImageField(verbose_name='Изображение')
     description = models.TextField(verbose_name='Описание')
     price = models.DecimalField(max_digits=9, decimal_places=2, verbose_name='Цена')
     features = models.ManyToManyField(
         'specs.ProductFeatures',
-        blank=True,
+        blank=True, null=True,
         related_name='features_for_product',
-        verbose_name='Характеристики')
+        verbose_name='Характеристики'
+    )
 
     def get_absolute_url(self):
         return reverse('product_detail', kwargs={'slug': self.slug})
