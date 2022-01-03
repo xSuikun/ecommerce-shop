@@ -22,6 +22,9 @@
                 <div class="form-data mt-8 mb-8" v-if="!submitted">
                     <div class="mb-3 mt-3"> <button v-on:click.stop.prevent="submit" class="btn btn-dark w-100">Зарегистрироваться</button> </div>
                 </div>
+                <div style="text-align: center;">
+                    <a class="active text-dark" href="{% url 'social:begin' 'github' %}">Зарегистрироваться через GitHub</a>
+                </div>
             </form>
         </div>
     </div>

@@ -1,4 +1,5 @@
-from django.urls import path
+from django.conf.urls import url
+from django.urls import path, include
 from django.contrib.auth.views import LogoutView
 from rest_framework.routers import SimpleRouter
 
@@ -23,8 +24,9 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(next_page="/"), name='logout'),
     path('registration/', RegistrationView.as_view(), name='registration'),
-    path('registration/', RegistrationView.as_view(), name='registration'),
     path('profile/', ProfileView.as_view(), name='profile'),
+    url('', include('social_django.urls', namespace='social')),
+    path('auth/', auth, name='auth')
 ]
 
 urlpatterns += router.urls

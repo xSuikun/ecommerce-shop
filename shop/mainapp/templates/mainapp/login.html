@@ -27,6 +27,9 @@
                     {% if  request.user.is_authenticated %}
                     <div class="text-center d-flex flex-column"> <i class='bx bxs-badge-check'></i> <span class="text-center fs-1">Вы были успешно <br>Авторизованы</span> </div>
                     {% else %}
+                    <div style="text-align: center;">
+                        <a class="active text-dark" href="{% url 'social:begin' 'github' %}">Войти через GitHub</a>
+                    </div>
                     <div class="text-center d-flex flex-column"> <i class='bx bxs-badge-check'></i> <span class="text-center fs-1">Пожалуйста, зайдите в <br>Учетную запись</span> </div>
                     {% endif %}
                 </div>

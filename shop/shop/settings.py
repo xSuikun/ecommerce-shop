@@ -22,11 +22,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'crispy_forms',
+    'rest_framework',
+    'social_django',
+
     'mainapp',
     'specs',
     'tests',
-    'crispy_forms',
-    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -38,6 +41,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.github.GithubOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
 
 ROOT_URLCONF = 'shop.urls'
 
@@ -136,3 +144,9 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
     )
 }
+
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
+
+SOCIAL_AUTH_GITHUB_KEY = '0d7a00180464faadcf46'
+SOCIAL_AUTH_GITHUB_SECRET = '1d22bc1f14191ade33266d4e2f45b9920ff801d2'
+
