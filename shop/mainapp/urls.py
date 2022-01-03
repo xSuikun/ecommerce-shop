@@ -26,7 +26,6 @@ urlpatterns = [
     path('registration/', RegistrationView.as_view(), name='registration'),
     path('profile/', ProfileView.as_view(), name='profile'),
     url('', include('social_django.urls', namespace='social')),
-    path('auth/', auth, name='auth')
 ]
 
 urlpatterns += router.urls
