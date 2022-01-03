@@ -5,6 +5,8 @@ from django.shortcuts import render
 from django.views import View
 from django.http import HttpResponseRedirect
 from django.views.generic import DetailView
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -210,3 +212,7 @@ class ProductViewSet(ModelViewSet):
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoryListSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_fields = ['name', 'slug']
+    search_fields = ['name', 'slug']
+    ordering_fields = ['name', 'slug']
