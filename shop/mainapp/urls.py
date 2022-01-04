@@ -13,7 +13,6 @@ router.register(r'api/categories', CategoryViewSet)
 urlpatterns = [
     path('', BaseView.as_view(), name='base'),
     path('cart/', CartView.as_view(), name='cart'),
-    path('cart2/', CartView.as_view(), name='cart'),
     path('checkout/', CheckoutView.as_view(), name='checkout'),
     path('create-order/', CreateOrderView.as_view(), name='create-order'),
     path('add-to-cart/<str:slug>/', AddToCartView.as_view(), name='add_to_cart'),
