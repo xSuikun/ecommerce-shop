@@ -24,6 +24,7 @@ class MaxResolutionErrorException(Exception):
 class Category(models.Model):
     name = models.CharField(max_length=255, verbose_name='Категория')
     slug = models.SlugField(unique=True)
+    owner = models.ForeignKey(User, blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.name
@@ -49,6 +50,7 @@ class Product(models.Model):
         related_name='features_for_product',
         verbose_name='Характеристики'
     )
+    owner = models.ForeignKey(User, blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
     def get_absolute_url(self):
         return reverse('product_detail', kwargs={'slug': self.slug})

@@ -7,7 +7,7 @@ from django.http import HttpResponseRedirect
 from django.views.generic import DetailView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +15,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from .models import Product, Category, Customer, Cart, CartProduct, Order
 from .forms import OrderForm, LoginForm, RegistrationForm
+from .permissions import IsOwnerOrReadOnly
 from .utils import recalculate_cart
 from .mixins import CartMixin
 from .serializers import ProductListSerializer, CategoryListSerializer
@@ -208,14 +209,26 @@ class ProfileView(CartMixin, View):
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
-    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    permission_classes = [IsOwnerOrReadOnly]
+    filter_fields = ['title', 'slug']
+    search_fields = ['title', 'slug']
+    ordering_fields = ['title', 'slug']
+
+    def perform_create(self, serializer):
+        serializer.validated_data['owner'] = self.request.user
+        serializer.save()
 
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoryListSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsOwnerOrReadOnly]
     filter_fields = ['name', 'slug']
     search_fields = ['name', 'slug']
     ordering_fields = ['name', 'slug']
+
+    def perform_create(self, serializer):
+        serializer.validated_data['owner'] = self.request.user
+        serializer.save()
