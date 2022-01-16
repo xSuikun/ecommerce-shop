@@ -7,7 +7,6 @@ from django.http import HttpResponseRedirect
 from django.views.generic import DetailView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,7 +14,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from .models import Product, Category, Customer, Cart, CartProduct, Order
 from .forms import OrderForm, LoginForm, RegistrationForm
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrStaffOrReadOnly
 from .utils import recalculate_cart
 from .mixins import CartMixin
 from .serializers import ProductListSerializer, CategoryListSerializer
@@ -210,7 +209,7 @@ class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrStaffOrReadOnly]
     filter_fields = ['title', 'slug']
     search_fields = ['title', 'slug']
     ordering_fields = ['title', 'slug']
@@ -224,7 +223,7 @@ class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoryListSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrStaffOrReadOnly]
     filter_fields = ['name', 'slug']
     search_fields = ['name', 'slug']
     ordering_fields = ['name', 'slug']

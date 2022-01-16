@@ -12,6 +12,7 @@ from mainapp.models import Category, Product
 class ShopAPITestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create(username='test_username')
+        self.staff_user = User.objects.create(username='staff', is_staff=True)
         self.test_category = Category.objects.create(name='Тест', slug='test_category', owner=self.user)
         self.books_category = Category.objects.create(name='Книги', slug='books_category')
         self.books2_category = Category.objects.create(name='books', slug='books_category2')
@@ -98,6 +99,32 @@ class ShopAPITestCase(TestCase):
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(self.user, Category.objects.last().owner)
 
+    def test_category_not_owner(self):
+        self.client.force_login(self.user)
         url = f'http://localhost:81/api/categories/{self.books_category.id}/'
         response = self.client.delete(url)
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+
+    def test_category_not_owner_but_staff(self):
+        self.client.force_login(self.staff_user)
+        url = f'http://localhost:81/api/categories/{self.books_category.id}/'
+        data = {
+            "name": "changed_name",
+            "slug": "changed_slug"
+        }
+        json_data = json.dumps(data)
+        response = self.client.put(url, data=json_data, content_type='application/json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.books_category.refresh_from_db()
+        self.assertEqual('changed_name', self.books_category.name)
+        self.assertEqual('changed_slug', self.books_category.slug)
+
+
+
+
+
+
+
+
+
+
