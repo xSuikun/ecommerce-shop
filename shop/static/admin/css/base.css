@@ -390,16 +390,6 @@ table thead th .text a {
     padding: 8px 10px;
 }
 
-span.nav {
-    float: right;
-    color: $subtle-white;
-    background-color: $blue;
-    padding: 2px 5px;
-    text-align: center;
-    font-size: .8rem;
-    border-radius: 3px;
-}
-
 table thead th .text a:focus, table thead th .text a:hover {
     background: var(--selected-bg);
 }

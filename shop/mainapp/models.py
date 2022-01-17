@@ -44,13 +44,11 @@ class Product(models.Model):
     image = models.ImageField(verbose_name='Изображение')
     description = models.TextField(verbose_name='Описание')
     price = models.DecimalField(max_digits=9, decimal_places=2, verbose_name='Цена')
-    features = models.ManyToManyField(
-        'specs.ProductFeatures',
-        blank=True, null=True,
-        related_name='features_for_product',
-        verbose_name='Характеристики'
-    )
-    owner = models.ForeignKey(User, blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    features = models.ManyToManyField('specs.ProductFeatures', blank=True,
+                                      related_name='features_for_product', verbose_name='Характеристики')
+    owner = models.ForeignKey(User, blank=True, null=True, default=None,
+                              on_delete=models.SET_NULL, related_name='self_products')
+    viewer = models.ManyToManyField(User, through='UserProductRelation', related_name='products')
 
     def get_absolute_url(self):
         return reverse('product_detail', kwargs={'slug': self.slug})
@@ -173,3 +171,22 @@ class Comments(models.Model):
     created_at = models.DateTimeField(auto_now=True)
     text = models.TextField(verbose_name='Комментарий')
     status = models.BooleanField(verbose_name='Видимый?')
+
+
+class UserProductRelation(models.Model):
+    RATE_CHOICES = (
+        (1, 'Ужасно'),
+        (2, 'Плохо'),
+        (3, 'Нормально'),
+        (4, 'Хорошо'),
+        (5, 'Отлично')
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    like = models.BooleanField(default=False)
+    in_bookmarks = models.BooleanField(default=False)
+    rate = models.PositiveSmallIntegerField(choices=RATE_CHOICES, null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.user.username} => {self.product.title}'

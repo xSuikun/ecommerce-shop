@@ -1,23 +1,26 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.db import transaction
+from django.db.models import Count, Case, When, Avg
 from django.shortcuts import render
 from django.views import View
 from django.http import HttpResponseRedirect
 from django.views.generic import DetailView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.mixins import UpdateModelMixin
+from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
-from .models import Product, Category, Customer, Cart, CartProduct, Order
+from .models import Product, Category, Customer, Cart, CartProduct, Order, UserProductRelation
 from .forms import OrderForm, LoginForm, RegistrationForm
 from .permissions import IsOwnerOrStaffOrReadOnly
 from .utils import recalculate_cart
 from .mixins import CartMixin
-from .serializers import ProductListSerializer, CategoryListSerializer
+from .serializers import ProductListSerializer, CategoryListSerializer, UserProductRelationSerializer
 
 
 class BaseView(CartMixin, View):
@@ -206,7 +209,10 @@ class ProfileView(CartMixin, View):
 
 
 class ProductViewSet(ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().annotate(
+            likes=Count(Case(When(userproductrelation__like=True, then=1))),
+            rating=Avg('userproductrelation__rate')
+        ).order_by('id')
     serializer_class = ProductListSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     permission_classes = [IsOwnerOrStaffOrReadOnly]
@@ -231,3 +237,15 @@ class CategoryViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.validated_data['owner'] = self.request.user
         serializer.save()
+
+
+class UserProductRelationView(UpdateModelMixin, GenericViewSet):
+    queryset = UserProductRelation.objects.all()
+    serializer_class = UserProductRelationSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'product'
+
+    def get_object(self):
+        obj, created = UserProductRelation.objects.get_or_create(user=self.request.user, product_id=self.kwargs['product'])
+        return obj
+

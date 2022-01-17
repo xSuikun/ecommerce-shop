@@ -2,11 +2,13 @@ import json
 from collections import OrderedDict
 
 from django.contrib.auth.models import User
+from django.db.models import Count, Case, When, Avg
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 
-from mainapp.models import Category, Product
+from mainapp.models import Category, Product, UserProductRelation
+from mainapp.serializers import ProductListSerializer
 
 
 class ShopAPITestCase(TestCase):
@@ -118,6 +120,104 @@ class ShopAPITestCase(TestCase):
         self.books_category.refresh_from_db()
         self.assertEqual('changed_name', self.books_category.name)
         self.assertEqual('changed_slug', self.books_category.slug)
+
+
+class ProductRelationTestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(username='test_username')
+        self.staff_user = User.objects.create(username='staff', is_staff=True)
+        self.test_category = Category.objects.create(name='Тест', slug='test_category', owner=self.user)
+        self.books_category = Category.objects.create(name='Книги', slug='books_category')
+        self.books2_category = Category.objects.create(name='books', slug='books_category2')
+        self.smartphones_category = Category.objects.create(name='Смартфоны', slug='smartphones_category')
+        self.test_product = Product.objects.create(
+            title='Тестовый товар', category=self.test_category, slug='test_product', image='macbookpro13_jp7o4fh.jpg',
+            price=199.99, description='abra-kadabra', owner=self.user)
+        self.test_product2 = Product.objects.create(
+            title='Тестовый товар2', category=self.smartphones_category, slug='test_product2', image='honor.jpg',
+            price=549.99, description='abra-kadabra2', owner=self.staff_user)
+
+    def test_like(self):
+        url = reverse('userproductrelation-detail', args=(self.test_product.id,))
+        print(url)
+        data = {
+            'like': True
+        }
+        json_data = json.dumps(data)
+        self.client.force_login(self.user)
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+        self.relation = UserProductRelation.objects.get(user=self.user, product=self.test_product)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertTrue(self.relation.like)
+
+    def test_in_bookmarks(self):
+        url = reverse('userproductrelation-detail', args=(self.test_product2.id,))
+        data = {
+            'in_bookmarks': True
+        }
+        json_data = json.dumps(data)
+        self.client.force_login(self.staff_user)
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+        relation = UserProductRelation.objects.get(user=self.staff_user, product=self.test_product2)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertTrue(relation.in_bookmarks)
+
+    def test_rate(self):
+        url = reverse('userproductrelation-detail', args=(self.test_product2.id,))
+        data = {
+            'rate': 3
+        }
+        json_data = json.dumps(data)
+        self.client.force_login(self.staff_user)
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+        relation = UserProductRelation.objects.get(user=self.staff_user, product=self.test_product2)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(relation.rate, 3)
+
+    def test_rate_wrong(self):
+        url = reverse('userproductrelation-detail', args=(self.test_product2.id,))
+        data = {
+            'rate': 6
+        }
+        json_data = json.dumps(data)
+        self.client.force_login(self.staff_user)
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+        relation = UserProductRelation.objects.get(user=self.staff_user, product=self.test_product2)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    def test_product_likes_and_rating(self):
+        UserProductRelation.objects.create(user=self.user, product=self.test_product, like=True, rate=4)
+        UserProductRelation.objects.create(user=self.staff_user, product=self.test_product, like=True, rate=5)
+        UserProductRelation.objects.create(user=self.staff_user, product=self.test_product, like=True, rate=2)
+        UserProductRelation.objects.create(user=self.user, product=self.test_product2, like=True)
+        UserProductRelation.objects.create(user=self.staff_user, product=self.test_product2, like=False)
+        products = Product.objects.all().annotate(
+            likes=Count(Case(When(userproductrelation__like=True, then=1))),
+            rating=Avg('userproductrelation__rate')
+        ).order_by('id')
+        data = ProductListSerializer(products, many=True).data
+        current_data = json.loads(json.dumps(data))
+        print('test_product_likes current_data:', current_data)
+        expected_data = [
+            {
+                'title': 'Тестовый товар',
+                'slug': 'test_product',
+                'category': self.test_category.name,
+                'price': '199.99',
+                'annotated_likes': 3,
+                'rating': '3.7'
+            },
+            {
+                'title': 'Тестовый товар2',
+                'slug': 'test_product2',
+                'category': self.smartphones_category.name,
+                'price': '549.99',
+                'annotated_likes': 1,
+                'rating': None
+            }
+        ]
+        print('test_product_likes expected_data:', expected_data)
+        self.assertEqual(expected_data, current_data)
 
 
 
