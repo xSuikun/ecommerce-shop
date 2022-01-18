@@ -42,6 +42,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'debug_toolbar_force.middleware.ForceDebugToolbarMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -160,10 +161,10 @@ INTERNAL_IPS = [
 
 
 
-def show_toolbar(request):
-    return True
-
-
-DEBUG_TOOLBAR_CONFIG = {
-    "SHOW_TOOLBAR_CALLBACK": show_toolbar,
-}
+# def show_toolbar(request):
+#     return True
+#
+#
+# DEBUG_TOOLBAR_CONFIG = {
+#     "SHOW_TOOLBAR_CALLBACK": show_toolbar,
+# }

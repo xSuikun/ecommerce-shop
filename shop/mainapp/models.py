@@ -48,7 +48,7 @@ class Product(models.Model):
                                       related_name='features_for_product', verbose_name='Характеристики')
     owner = models.ForeignKey(User, blank=True, null=True, default=None,
                               on_delete=models.SET_NULL, related_name='self_products')
-    viewer = models.ManyToManyField(User, through='UserProductRelation', related_name='products')
+    viewers = models.ManyToManyField(User, through='UserProductRelation', related_name='products')
 
     def get_absolute_url(self):
         return reverse('product_detail', kwargs={'slug': self.slug})

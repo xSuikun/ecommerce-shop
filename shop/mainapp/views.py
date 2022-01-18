@@ -20,7 +20,7 @@ from .forms import OrderForm, LoginForm, RegistrationForm
 from .permissions import IsOwnerOrStaffOrReadOnly
 from .utils import recalculate_cart
 from .mixins import CartMixin
-from .serializers import ProductListSerializer, CategoryListSerializer, UserProductRelationSerializer
+from .serializers import ProductSerializer, CategorySerializer, UserProductRelationSerializer
 
 
 class BaseView(CartMixin, View):
@@ -212,8 +212,8 @@ class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all().annotate(
             likes=Count(Case(When(userproductrelation__like=True, then=1))),
             rating=Avg('userproductrelation__rate')
-        ).order_by('id')
-    serializer_class = ProductListSerializer
+        ).select_related('category').prefetch_related('viewers').order_by('id')
+    serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     permission_classes = [IsOwnerOrStaffOrReadOnly]
     filter_fields = ['title', 'slug']
@@ -227,7 +227,7 @@ class ProductViewSet(ModelViewSet):
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
-    serializer_class = CategoryListSerializer
+    serializer_class = CategorySerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     permission_classes = [IsOwnerOrStaffOrReadOnly]
     filter_fields = ['name', 'slug']

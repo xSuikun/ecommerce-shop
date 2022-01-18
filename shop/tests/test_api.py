@@ -8,7 +8,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from mainapp.models import Category, Product, UserProductRelation
-from mainapp.serializers import ProductListSerializer
+from mainapp.serializers import ProductSerializer
 
 
 class ShopAPITestCase(TestCase):
@@ -188,14 +188,13 @@ class ProductRelationTestCase(TestCase):
     def test_product_likes_and_rating(self):
         UserProductRelation.objects.create(user=self.user, product=self.test_product, like=True, rate=4)
         UserProductRelation.objects.create(user=self.staff_user, product=self.test_product, like=True, rate=5)
-        UserProductRelation.objects.create(user=self.staff_user, product=self.test_product, like=True, rate=2)
         UserProductRelation.objects.create(user=self.user, product=self.test_product2, like=True)
         UserProductRelation.objects.create(user=self.staff_user, product=self.test_product2, like=False)
         products = Product.objects.all().annotate(
             likes=Count(Case(When(userproductrelation__like=True, then=1))),
             rating=Avg('userproductrelation__rate')
         ).order_by('id')
-        data = ProductListSerializer(products, many=True).data
+        data = ProductSerializer(products, many=True).data
         current_data = json.loads(json.dumps(data))
         print('test_product_likes current_data:', current_data)
         expected_data = [
@@ -204,16 +203,40 @@ class ProductRelationTestCase(TestCase):
                 'slug': 'test_product',
                 'category': self.test_category.name,
                 'price': '199.99',
-                'annotated_likes': 3,
-                'rating': '3.7'
+                'likes': 2,
+                'rating': '4.5',
+                'viewers': [
+                    {
+                        'first_name': '',
+                        'last_name': '',
+                        'username': 'test_username'
+                    },
+                    {
+                        'first_name': '',
+                        'last_name': '',
+                        'username': 'staff'
+                    }
+                ]
             },
             {
                 'title': 'Тестовый товар2',
                 'slug': 'test_product2',
                 'category': self.smartphones_category.name,
                 'price': '549.99',
-                'annotated_likes': 1,
-                'rating': None
+                'likes': 1,
+                'rating': None,
+                'viewers': [
+                    {
+                        'first_name': '',
+                        'last_name': '',
+                        'username': 'test_username'
+                    },
+                    {
+                        'first_name': '',
+                        'last_name': '',
+                        'username': 'staff'
+                    }
+                ]
             }
         ]
         print('test_product_likes expected_data:', expected_data)
