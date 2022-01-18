@@ -49,6 +49,7 @@ class Product(models.Model):
     owner = models.ForeignKey(User, blank=True, null=True, default=None,
                               on_delete=models.SET_NULL, related_name='self_products')
     viewers = models.ManyToManyField(User, through='UserProductRelation', related_name='products')
+    rating = models.DecimalField(max_digits=2, decimal_places=1, default=None, null=True)
 
     def get_absolute_url(self):
         return reverse('product_detail', kwargs={'slug': self.slug})
@@ -75,6 +76,7 @@ class Product(models.Model):
             self.image = InMemoryUploadedFile(
                 filestream, 'ImageField', name, 'join/image', sys.getsizeof(filestream), None
             )
+
         super().save(*args, **kwargs)
 
     def get_features(self):
@@ -190,3 +192,15 @@ class UserProductRelation(models.Model):
 
     def __str__(self):
         return f'{self.user.username} => {self.product.title}'
+
+    def save(self, *args, **kwargs):
+        from .logic import set_rating
+
+        creating = not self.pk
+        old_rating = self.rate
+
+        super().save(*args, **kwargs)
+
+        new_rating = self.rate
+        if old_rating != new_rating or creating:
+            set_rating(self.product)

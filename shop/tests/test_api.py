@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 
+from mainapp.logic import set_rating
 from mainapp.models import Category, Product, UserProductRelation
 from mainapp.serializers import ProductSerializer
 
@@ -187,13 +188,18 @@ class ProductRelationTestCase(TestCase):
 
     def test_product_likes_and_rating(self):
         UserProductRelation.objects.create(user=self.user, product=self.test_product, like=True, rate=4)
-        UserProductRelation.objects.create(user=self.staff_user, product=self.test_product, like=True, rate=5)
+        user_product_2 = UserProductRelation.objects.create(user=self.staff_user, product=self.test_product, like=True)
+        user_product_2.rate = 5
+        user_product_2.save()
         UserProductRelation.objects.create(user=self.user, product=self.test_product2, like=True)
         UserProductRelation.objects.create(user=self.staff_user, product=self.test_product2, like=False)
         products = Product.objects.all().annotate(
-            likes=Count(Case(When(userproductrelation__like=True, then=1))),
-            rating=Avg('userproductrelation__rate')
+            likes=Count(Case(When(userproductrelation__like=True, then=1)))
         ).order_by('id')
+        set_rating(self.test_product)
+        set_rating(self.test_product2)
+        self.test_product.refresh_from_db()
+        self.test_product2.refresh_from_db()
         data = ProductSerializer(products, many=True).data
         current_data = json.loads(json.dumps(data))
         print('test_product_likes current_data:', current_data)

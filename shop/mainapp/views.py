@@ -210,8 +210,7 @@ class ProfileView(CartMixin, View):
 
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all().annotate(
-            likes=Count(Case(When(userproductrelation__like=True, then=1))),
-            rating=Avg('userproductrelation__rate')
+            likes=Count(Case(When(userproductrelation__like=True, then=1)))
         ).select_related('category').prefetch_related('viewers').order_by('id')
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
