@@ -44,6 +44,7 @@ class Product(models.Model):
     image = models.ImageField(verbose_name='Изображение')
     description = models.TextField(verbose_name='Описание')
     price = models.DecimalField(max_digits=9, decimal_places=2, verbose_name='Цена')
+    discount = models.DecimalField(max_digits=9, decimal_places=2, verbose_name='Скидка', default=0)
     features = models.ManyToManyField('specs.ProductFeatures', blank=True,
                                       related_name='features_for_product', verbose_name='Характеристики')
     owner = models.ForeignKey(User, blank=True, null=True, default=None,
@@ -79,6 +80,11 @@ class Product(models.Model):
 
         super().save(*args, **kwargs)
 
+    def get_discount_price(self):
+        if self.discount <= 0:
+            return self.price
+        return self.price - self.discount
+
     def get_features(self):
         return {f.feature.feature_name: ' '.join([f.value, f.feature.unit or ""]) for f in self.features.all()}
 
@@ -94,7 +100,7 @@ class CartProduct(models.Model):
         return f'Продукт: {self.product.title} (для корзины)'
 
     def save(self, *args, **kwargs):
-        self.final_price = self.qty * self.product.price
+        self.final_price = self.qty * self.product.get_discount_price
         super().save(*args, **kwargs)
 
 

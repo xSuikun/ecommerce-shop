@@ -43,7 +43,12 @@
                             <!-- Product name-->
                             <h5 class="fw-bolder">{{ product.title }} </h5>
                             <!-- Product price-->
+                            {% if product.discount <= 0 %}
                             {{ product.price }}
+                            {% else %}
+                            <span class="text-muted text-decoration-line-through">{{ product.price }}</span>
+                            {{ product.get_discount_price }}
+                            {% endif %}
                         </div>
                     </div>
                     <!-- Product actions-->

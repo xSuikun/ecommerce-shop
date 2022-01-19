@@ -25,7 +25,7 @@ from .serializers import ProductSerializer, CategorySerializer, UserProductRelat
 
 class BaseView(CartMixin, View):
     def get(self, request, *args, **kwargs):
-        products = Product.objects.all().only('title', 'category', 'slug', 'price', 'image')
+        products = Product.objects.all().only('title', 'price', 'discount', 'image', 'slug')
         context = {
             'products': products,
             'cart': self.cart,
