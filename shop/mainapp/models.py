@@ -10,6 +10,8 @@ from django.utils import timezone
 from PIL import Image
 from io import BytesIO
 
+from mainapp.service import send
+
 User = get_user_model()
 
 
@@ -100,7 +102,7 @@ class CartProduct(models.Model):
         return f'Продукт: {self.product.title} (для корзины)'
 
     def save(self, *args, **kwargs):
-        self.final_price = self.qty * self.product.get_discount_price
+        self.final_price = self.qty * self.product.get_discount_price()
         super().save(*args, **kwargs)
 
 
@@ -210,3 +212,11 @@ class UserProductRelation(models.Model):
         new_rating = self.rate
         if old_rating != new_rating or creating:
             set_rating(self.product)
+
+
+class Contact(models.Model):
+    name = models.CharField(max_length=30)
+    email = models.EmailField(max_length=60)
+
+    def __str__(self):
+        return self.name

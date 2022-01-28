@@ -2,10 +2,10 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.db import transaction
 from django.db.models import Count, Case, When, Avg
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 from django.http import HttpResponseRedirect
-from django.views.generic import DetailView
+from django.views.generic import DetailView, CreateView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.mixins import UpdateModelMixin
@@ -15,9 +15,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
-from .models import Product, Category, Customer, Cart, CartProduct, Order, UserProductRelation
-from .forms import OrderForm, LoginForm, RegistrationForm
+from .models import Product, Category, Customer, Cart, CartProduct, Order, UserProductRelation, Contact
+from .forms import OrderForm, LoginForm, RegistrationForm, ContactForm
 from .permissions import IsOwnerOrStaffOrReadOnly
+from .tasks import send_spam_email
 from .utils import recalculate_cart
 from .mixins import CartMixin
 from .serializers import ProductSerializer, CategorySerializer, UserProductRelationSerializer
@@ -59,7 +60,6 @@ class ProductDetailView(CartMixin, DetailView):
 class AddToCartView(CartMixin, View):
     def get(self, request, *args, **kwargs):
         product_slug = kwargs.get('slug')
-        print(kwargs.get('slug'))
         product = Product.objects.get(slug=product_slug)
         cart_product, created = CartProduct.objects.get_or_create(
             user=self.cart.owner, cart=self.cart, product=product
@@ -70,7 +70,7 @@ class AddToCartView(CartMixin, View):
             cart_product.qty += 1
             cart_product.save()
         recalculate_cart(self.cart)
-        # messages.add_message(request, messages.INFO, 'Товар успешно добавлен в корзину')
+        messages.add_message(request, messages.INFO, 'Товар успешно добавлен в корзину')
         return HttpResponseRedirect('/cart/')
 
 
@@ -248,3 +248,14 @@ class UserProductRelationView(UpdateModelMixin, GenericViewSet):
         obj, created = UserProductRelation.objects.get_or_create(user=self.request.user, product_id=self.kwargs['product'])
         return obj
 
+
+class ContactView(CreateView):
+    model = Contact
+    form_class = ContactForm
+    success_url = '/subscribe/'
+    template_name = 'mainapp/subscribe.html'
+
+    def form_valid(self, form):
+        form.save()
+        send_spam_email.delay(form.instance.email)
+        return super().form_valid(form)

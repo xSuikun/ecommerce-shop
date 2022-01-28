@@ -6,7 +6,7 @@ register = template.Library()
 
 @register.simple_tag()
 def get_categories():
-    categories = Category.objects.all()
+    categories = Category.objects.all().only('name', 'slug')
     return categories
 
 

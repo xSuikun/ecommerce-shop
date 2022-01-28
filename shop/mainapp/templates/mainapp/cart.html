@@ -32,7 +32,7 @@
         <tr>
           <th scope="row">{{ product.product.title }}</th>
           <td class="w-25"><img src="{{ product.product.image.url }}" alt="product-image" class="img-fluid"></td>
-          <td>{{ product.product.price }} ₽</td>
+          <td>{{ product.product.get_discount_price }} ₽</td>
           <td>
             <form action="{% url 'change-qty' slug=product.product.slug %}" method="POST" class="d-flex">
               {% csrf_token %}

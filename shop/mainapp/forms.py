@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.forms import TextInput, EmailInput
 
-from .models import Order
+from .models import Order, Contact
 
 
 class OrderForm(forms.ModelForm):
@@ -85,3 +86,19 @@ class RegistrationForm(forms.ModelForm):
         model = User
         fields = ('username', 'password', 'confirm_password', 'email', 'first_name', 'last_name', 'phone', 'address')
 
+
+class ContactForm(forms.ModelForm):
+    class Meta:
+        model = Contact
+        fields = ['name', 'email']
+
+        widgets = {
+            "name": TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Имя'
+            }),
+            "email": EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Email'
+            })
+        }
