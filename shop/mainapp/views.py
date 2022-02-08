@@ -128,7 +128,11 @@ class CreateOrderView(CartMixin, View):
     def post(self, request, *args, **kwargs):
         form = OrderForm(request.POST or None)
         if form.is_valid():
-            customer = Customer.objects.get(user=request.user)
+            # Сюда нужно добавить обработку анонимного юзера
+            if request.user:
+                customer = Customer.objects.get(user=request.user)
+            else:
+                customer = Customer.objects.get(id=2)
             new_order = form.save(commit=False)
             new_order.customer = customer
             new_order.first_name = form.cleaned_data['first_name']

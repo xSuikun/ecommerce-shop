@@ -52,7 +52,7 @@ class Product(models.Model):
     owner = models.ForeignKey(User, blank=True, null=True, default=None,
                               on_delete=models.SET_NULL, related_name='self_products')
     viewers = models.ManyToManyField(User, through='UserProductRelation', related_name='products')
-    rating = models.DecimalField(max_digits=2, decimal_places=1, default=None, null=True)
+    rating = models.DecimalField(max_digits=2, decimal_places=1, default=None, null=True, blank=True)
 
     def get_absolute_url(self):
         return reverse('product_detail', kwargs={'slug': self.slug})
