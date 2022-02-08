@@ -1,8 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.db import transaction
-from django.db.models import Count, Case, When, Avg
-from django.shortcuts import render, redirect
+from django.db.models import Count, Case, When
+from django.shortcuts import render
 from django.views import View
 from django.http import HttpResponseRedirect
 from django.views.generic import DetailView, CreateView
@@ -11,15 +11,13 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.mixins import UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
-from .models import Product, Category, Customer, Cart, CartProduct, Order, UserProductRelation, Contact
+from .models import Product, Category, Customer, CartProduct, Order, UserProductRelation, Contact
 from .forms import OrderForm, LoginForm, RegistrationForm, ContactForm
 from .permissions import IsOwnerOrStaffOrReadOnly
+from .services import _add_product_to_cart, _remove_product_from_cart, _change_product_qty_in_cart
 from .tasks import send_spam_email
-from .utils import recalculate_cart
 from .mixins import CartMixin
 from .serializers import ProductSerializer, CategorySerializer, UserProductRelationSerializer
 
@@ -61,16 +59,7 @@ class AddToCartView(CartMixin, View):
     def get(self, request, *args, **kwargs):
         product_slug = kwargs.get('slug')
         product = Product.objects.get(slug=product_slug)
-        cart_product, created = CartProduct.objects.get_or_create(
-            user=self.cart.owner, cart=self.cart, product=product
-        )
-        if created:
-            self.cart.products.add(cart_product)
-        else:
-            cart_product.qty += 1
-            cart_product.save()
-        recalculate_cart(self.cart)
-        messages.add_message(request, messages.INFO, 'Товар успешно добавлен в корзину')
+        _add_product_to_cart(cart=self.cart, product=product, request=request)
         return HttpResponseRedirect('/cart/')
 
 
@@ -78,13 +67,7 @@ class DeleteFromCartView(CartMixin, View):
     def get(self, request, *args, **kwargs):
         product_slug = kwargs.get('slug')
         product = Product.objects.get(slug=product_slug)
-        cart_product = CartProduct.objects.get(
-            user=self.cart.owner, cart=self.cart, product=product
-        )
-        self.cart.products.remove(cart_product)
-        cart_product.delete()
-        recalculate_cart(self.cart)
-        messages.add_message(request, messages.INFO, 'Товар успешно удален из корзины')
+        _remove_product_from_cart(cart=self.cart, product=product, request=request)
         return HttpResponseRedirect('/cart/')
 
 
@@ -92,16 +75,7 @@ class ChangeQtyView(CartMixin, View):
     def post(self, request, *args, **kwargs):
         product_slug = kwargs.get('slug')
         product = Product.objects.get(slug=product_slug)
-        cart_product = CartProduct.objects.get(
-            user=self.cart.owner, cart=self.cart, product=product
-        )
-        try:
-            cart_product.qty = int(request.POST.get('qty'))
-            cart_product.save()
-            recalculate_cart(self.cart)
-            messages.add_message(request, messages.INFO, 'Количество товара успешно изменено')
-        except Exception as ex:
-            print(ex)
+        _change_product_qty_in_cart(cart=self.cart, product=product, request=request)
         return HttpResponseRedirect('/cart/')
 
 

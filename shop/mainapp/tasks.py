@@ -2,7 +2,7 @@ from django.core.mail import send_mail
 
 from shop.celery import app
 
-from .service import send
+from .mail_services import send
 from .models import Contact
 
 

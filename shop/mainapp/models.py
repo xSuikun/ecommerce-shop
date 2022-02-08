@@ -10,7 +10,7 @@ from django.utils import timezone
 from PIL import Image
 from io import BytesIO
 
-from mainapp.service import send
+from mainapp.mail_services import send
 
 User = get_user_model()
 
